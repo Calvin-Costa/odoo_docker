@@ -1,0 +1,41 @@
+name: odoo_docker
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - POSTGRES_USER=o_doo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata-volume:/var/lib/postgresql/data/pgdata
+    secrets:
+      - db_password
+
+  odoo:
+    image: odoo:15
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=db
+      - PORT=5432
+      - USER=o_doo
+      - PASSWORD_FILE=/run/secrets/db_password
+    volumes:
+      - ./config:/etc/odoo
+      - odoo-data:/var/lib/odoo
+      - odoo-addons:/mnt/extra-addons
+    secrets:
+      - db_password
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+
+volumes:
+  pgdata-volume:
+  odoo-data:
+  odoo-addons:
